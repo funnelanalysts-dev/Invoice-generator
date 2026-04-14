@@ -1,0 +1,6 @@
+{
+  "name": "Invoicely",
+  "description": "A professional invoice generator with real-time calculations, PDF export, and dashboard analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
