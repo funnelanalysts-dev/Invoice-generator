@@ -33,6 +33,10 @@ const invoiceSchema = z.object({
   clientEmail: z.string().email().optional().or(z.literal('')),
   clientAddress: z.string().optional(),
   clientPhone: z.string().optional(),
+  senderName: z.string().min(1, 'Sender name is required'),
+  senderEmail: z.string().email().optional().or(z.literal('')),
+  senderAddress: z.string().optional(),
+  senderPhone: z.string().optional(),
   date: z.date(),
   dueDate: z.date(),
   currency: z.string().min(1),
@@ -51,7 +55,7 @@ interface InvoiceFormProps {
 }
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({ onCancel, onSuccess, initialData }) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<InvoiceFormValues>({
@@ -62,6 +66,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ onCancel, onSuccess, i
       clientEmail: initialData.clientEmail || '',
       clientAddress: initialData.clientAddress || '',
       clientPhone: initialData.clientPhone || '',
+      senderName: initialData.senderName || '',
+      senderEmail: initialData.senderEmail || '',
+      senderAddress: initialData.senderAddress || '',
+      senderPhone: initialData.senderPhone || '',
       date: initialData.date?.seconds ? new Date(initialData.date.seconds * 1000) : new Date(),
       dueDate: initialData.dueDate?.seconds ? new Date(initialData.dueDate.seconds * 1000) : new Date(),
       currency: initialData.currency || 'USD',
@@ -75,6 +83,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ onCancel, onSuccess, i
       clientEmail: '',
       clientAddress: '',
       clientPhone: '',
+      senderName: '',
+      senderEmail: '',
+      senderAddress: '',
+      senderPhone: '',
       date: new Date(),
       dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       currency: 'USD',
@@ -92,6 +104,24 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ onCancel, onSuccess, i
 
   const watchedItems = watch('items');
   const watchedDiscount = watch('discount');
+
+  // Auto-fill sender details from profile if it's a new invoice
+  useEffect(() => {
+    if (!initialData && profile) {
+      if (profile.companyName || profile.displayName) {
+        setValue('senderName', profile.companyName || profile.displayName || '');
+      }
+      if (profile.email) {
+        setValue('senderEmail', profile.email);
+      }
+      if (profile.address) {
+        setValue('senderAddress', profile.address);
+      }
+      if (profile.phone) {
+        setValue('senderPhone', profile.phone);
+      }
+    }
+  }, [profile, initialData, setValue]);
 
   const totals = React.useMemo(() => {
     const subtotal = watchedItems.reduce((acc, item) => acc + (item.quantity * item.price), 0);
@@ -148,6 +178,37 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ onCancel, onSuccess, i
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
+        {/* Sender Details */}
+        <Card className="lg:col-span-3">
+          <CardHeader>
+            <CardTitle>Sender Details (From)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="senderName">Your Name / Company</Label>
+                <Input id="senderName" {...register('senderName')} placeholder="Your Business Name" />
+                {errors.senderName && <p className="text-xs text-destructive">{errors.senderName.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="senderEmail">Your Email</Label>
+                <Input id="senderEmail" {...register('senderEmail')} placeholder="your@email.com" />
+                {errors.senderEmail && <p className="text-xs text-destructive">{errors.senderEmail.message}</p>}
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="senderAddress">Your Address</Label>
+                <Textarea id="senderAddress" {...register('senderAddress')} placeholder="Your Business Address" rows={2} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="senderPhone">Your Phone</Label>
+                <Input id="senderPhone" {...register('senderPhone')} placeholder="+1 234 567 890" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Client Details */}
         <Card className="lg:col-span-2">
           <CardHeader>

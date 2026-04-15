@@ -47,15 +47,17 @@ export const generateInvoicePDF = (invoice: Invoice, profile: UserProfile | null
   
   doc.setFontSize(11);
   doc.setTextColor(black[0], black[1], black[2]);
-  doc.text(profile?.companyName || profile?.displayName || 'Your Company', margin, addressY + 8);
+  
+  const fromName = invoice.senderName || profile?.companyName || profile?.displayName || 'Your Company';
+  doc.text(fromName, margin, addressY + 8);
   
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(grayDark[0], grayDark[1], grayDark[2]);
   const fromLines = [
-    profile?.address || '',
-    profile?.email || '',
-    profile?.phone || ''
+    invoice.senderAddress || profile?.address || '',
+    invoice.senderEmail || profile?.email || '',
+    invoice.senderPhone || profile?.phone || ''
   ].filter(Boolean);
   
   fromLines.forEach((line, i) => {

@@ -19,6 +19,10 @@ export interface Invoice {
   clientEmail?: string;
   clientAddress?: string;
   clientPhone?: string;
+  senderName?: string;
+  senderEmail?: string;
+  senderAddress?: string;
+  senderPhone?: string;
   items: InvoiceItem[];
   subtotal: number;
   taxTotal: number;
