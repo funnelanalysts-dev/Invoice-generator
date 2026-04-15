@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { UserProfile } from '../types/invoice';
@@ -48,10 +48,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async () => {
+    console.log('SignIn triggered');
     try {
-      const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      console.log('Starting Google sign-in popup');
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      console.log('SignIn successful:', result.user.email);
     } catch (error: any) {
+      console.error('SignIn error details:', error);
       // Handle common popup errors gracefully
       if (
         error.code === 'auth/popup-closed-by-user' ||
@@ -60,13 +64,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Sign-in popup closed or cancelled by user.');
         return;
       }
-      console.error('Authentication error:', error);
       throw error;
     }
   };
 
   const signOutUser = async () => {
-    const { signOut } = await import('firebase/auth');
     await signOut(auth);
   };
 

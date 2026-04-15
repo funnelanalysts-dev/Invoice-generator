@@ -20,18 +20,31 @@ if (!firebaseConfig.apiKey) {
     // in environments where environment variables are used instead.
     // @ts-ignore
     const config = await import('../../firebase-applet-config.json');
-    firebaseConfig = { ...firebaseConfig, ...(config.default || config) };
+    const localConfig = config.default || config;
+    firebaseConfig = { 
+      ...firebaseConfig, 
+      ...localConfig,
+      // Ensure we use the firestoreDatabaseId from the local config if available
+      firestoreDatabaseId: localConfig.firestoreDatabaseId || firebaseConfig.firestoreDatabaseId
+    };
+    console.log('Firebase: Loaded configuration from local file');
   } catch (e) {
-    // If both are missing, we'll log an error below
+    console.log('Firebase: Local configuration file not found, using environment variables');
   }
+} else {
+  console.log('Firebase: Using configuration from environment variables');
 }
 
 // Validate config
 if (!firebaseConfig || !firebaseConfig.apiKey) {
-  console.error('Firebase configuration is missing. If you are seeing a blank screen on Netlify, please ensure you have set the VITE_FIREBASE_* environment variables in your Netlify site settings.');
+  const errorMsg = 'Firebase configuration is missing. If you are seeing a blank screen on Netlify, please ensure you have set the VITE_FIREBASE_* environment variables in your Netlify site settings.';
+  console.error(errorMsg);
+  // Don't initialize if config is missing to avoid crashing the whole app
+  // but export dummy objects to prevent import errors
 }
 
 const app = initializeApp(firebaseConfig);
+console.log('Firebase: App initialized successfully');
 export const auth = getAuth(app);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
 export const googleProvider = new GoogleAuthProvider();
